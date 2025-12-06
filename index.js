@@ -32,36 +32,77 @@ async function run() {
 
         //save services to DB
 
-        app.post('/services', async(req, res)=>{
+        app.post('/services', async (req, res) => {
             const data = req.body;
             const date = new Date();
             data.createdAt = date;
             console.log(data);
-            
+
             console.log(data);
             const result = await petServices.insertOne(data);
             res.send(result)
-            
+
 
         })
 
         //Get a single service
 
-        app.get('/services/:id', async(req, res)=>{
+        app.get('/services/:id', async (req, res) => {
             const id = req.params;
             // console.log(id);
-            const query = {_id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await petServices.findOne(query);
             res.send(result)
-            
+
         })
 
         //Get service from DB
 
-        app.get('/services', async(req, res)=>{
-            const result = await petServices.find().toArray();
+        app.get('/services', async (req, res) => {
+
+            const { category } = req.query;
+
+            const query = category ? { category } : {};
+
+            const result = await petServices.find(query).toArray();
+
             res.send(result);
         })
+
+
+
+        //get my services
+        app.get('/my-services', async (req, res) => {
+            const { email } = req.query
+            const query = { email: email };
+            const result = await petServices.find(query).toArray()
+            res.send(result);
+            console.log(email);
+
+
+        })
+
+        // Update services
+        app.put('/update/:id', async (req, res) => {
+            const data = req.body;
+            const id = req.params
+            const query = { _id: new ObjectId(id) }
+            const updateService = {
+                $set: data
+            }
+            const result = await petServices.updateOne(query, updateService)
+            res.send(result)
+        })
+
+        app.delete('/delete/:id', async (req, res) => {
+            const id = req.params;
+            // console.log(id);
+            const query = { _id: new ObjectId(id) }
+            const result = await petServices.deleteOne(query);
+            res.send(result)
+
+        })
+
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -70,10 +111,10 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.get('/', (req, res)=>{
+app.get('/', (req, res) => {
     res.send('Hello from Backend')
 })
 
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log(`Server is running on ${port}`);
 })
